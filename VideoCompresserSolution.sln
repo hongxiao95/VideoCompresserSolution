@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26403.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoCompresserSolution", "VideoCompresserSolution\VideoCompresserSolution.csproj", "{08A87118-CC61-46C0-A573-B9A3A5D53E91}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotNetCoreConsole", "VideoCompresserSolution\dotNetCoreConsole.csproj", "{08A87118-CC61-46C0-A573-B9A3A5D53E91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoCompresserDFW", "VideoCompresserDFW\VideoCompresserDFW.csproj", "{52682B1F-B8D1-400E-B072-4580F64E7F4E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{08A87118-CC61-46C0-A573-B9A3A5D53E91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08A87118-CC61-46C0-A573-B9A3A5D53E91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08A87118-CC61-46C0-A573-B9A3A5D53E91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52682B1F-B8D1-400E-B072-4580F64E7F4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52682B1F-B8D1-400E-B072-4580F64E7F4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52682B1F-B8D1-400E-B072-4580F64E7F4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52682B1F-B8D1-400E-B072-4580F64E7F4E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
