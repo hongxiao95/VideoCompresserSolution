@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,10 +15,23 @@ namespace VideoCompresserDFW
     {
         static void Main(string[] args)
         {
+            Console.ReadLine();
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             MyVideo myVideo = new MyVideo(".\\SourceVideo2.mp4", 16);
+            Image<Bgr, Byte> im = myVideo.GetAverageFrame(0.2, true);
+            sw.Stop();
 
-            CvInvoke.Imshow("Name", myVideo.GetAverageFrame(0.2,true));
+            Console.WriteLine("Total Running Time: " + sw.ElapsedMilliseconds + "ms");
+            CvInvoke.Imshow("Name", im);
             CvInvoke.WaitKey();
+            Console.ReadLine();
+            im.Dispose();
+            GC.Collect();
+
+            Console.ReadLine();
+            Console.WriteLine();
+            Console.ReadLine();
         }
 
         public static void test()

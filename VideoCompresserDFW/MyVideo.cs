@@ -50,6 +50,7 @@ namespace VideoCompresserDFW
             this.frameHeight = (int)cap.GetCaptureProperty(CapProp.FrameHeight);
             this.frameWidth = (int)cap.GetCaptureProperty(CapProp.FrameWidth);
             this.fps = cap.GetCaptureProperty(CapProp.Fps);
+            this.currentFrameIndex = 0;
         }
 
         public void CaptureVideo()
@@ -111,11 +112,18 @@ namespace VideoCompresserDFW
 
         public void ReCapVideo()
         {
-            this.cap.Dispose();
-            this.CaptureVideo();
+            this.cap.SetCaptureProperty(CapProp.FrameCount, 0.0);
+            //this.cap.Dispose();
+            //this.CaptureVideo();
             this.InitVideoInfo();
             //this.smallRectWidthInPix = Math.Min(this.smallRectWidthInPix, Math.Min(this.frameHeight, this.FrameWidth));
-            this.InitRectsInfo();
+            //this.InitRectsInfo();
+        }
+
+        public void Dispose()
+        {
+            cap.Dispose();
+            mat.Dispose();
         }
 
         public Image<Bgr, Byte> ReadVideoImage()
@@ -148,9 +156,9 @@ namespace VideoCompresserDFW
             int skippedEach = (int)(1.0 / calcRate);
 
             Image<Bgr, int> averageFrame = this.ReadVideoImageMat().ToImage<Bgr, int>();
-            Image<Bgr, int> tempFrame;
             int tempImageCount = 1;
             double finishRate = 1.0 / this.frameCount * 100;
+           //Mat tmpMat = new Mat();
 
             if (offOrOnPrintInfo)
             {
@@ -158,24 +166,47 @@ namespace VideoCompresserDFW
                     new String('▋', (int)finishRate / 5));
             }
 
-            for(int i = 1; i < this.frameCount; i++)
+            //for (int i = 1; i < this.frameCount; i++)
+            //{
+
+            //    tmpMat = this.ReadVideoImageMat();
+            //    if (i % skippedEach == 0)
+            //    {
+            //        averageFrame += tmpMat.ToImage<Bgr, int>();
+            //        tempImageCount++;
+            //    }
+            //    if (offOrOnPrintInfo)
+            //    {
+            //        finishRate = (double)i / this.frameCount * 100;
+            //        Console.Write("\r" + new String(' ', 70) + "\r" + String.Format("Getting Average Frame... {0,4:F2} %\t\t", finishRate) +
+            //        new String('▋', (int)finishRate / 5));
+            //    }
+            //}
+
+            //Seems Higher Efficiency
+            for (int i = 1; i < calcRate * this.frameCount; i++)
             {
-                tempFrame = this.ReadVideoImageMat().ToImage<Bgr, int>();
-                if(i % skippedEach == 0)
-                {
-                    averageFrame += tempFrame;
-                    tempImageCount++;
-                }
+                cap.SetCaptureProperty(CapProp.FrameCount, this.currentFrameIndex + skippedEach);
+                this.currentFrameIndex += skippedEach - 1;
+                Image<Bgr, int> tmpImage = this.ReadVideoImageMat().ToImage<Bgr, int>();
+                averageFrame += tmpImage;
+                tmpImage.Dispose();
+                tempImageCount++;
+
                 if (offOrOnPrintInfo)
                 {
-                    finishRate = (double)i / this.frameCount * 100;
+                    finishRate = (double)this.currentFrameIndex / this.frameCount * 100;
                     Console.Write("\r" + new String(' ', 70) + "\r" + String.Format("Getting Average Frame... {0,4:F2} %\t\t", finishRate) +
                     new String('▋', (int)finishRate / 5));
                 }
             }
+            Console.WriteLine();
 
+            averageFrame /= tempImageCount;
+            Image<Bgr, Byte> averageFrameInByte = averageFrame.Convert<Bgr, Byte>();
+            averageFrame.Dispose();
 
-            return (averageFrame / tempImageCount).Convert<Bgr, Byte>();
+            return averageFrameInByte;
         }
 
         public ArrayList GetFrameList()
