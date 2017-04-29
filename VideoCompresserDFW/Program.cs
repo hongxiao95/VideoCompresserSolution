@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Drawing;
 using System.Diagnostics;
 using System.Linq;
@@ -17,20 +18,24 @@ namespace VideoCompresserDFW
         {
             Console.ReadLine();
             Stopwatch sw = new Stopwatch();
+
+
             sw.Start();
             MyVideo myVideo = new MyVideo(".\\SourceVideo2.mp4", 16);
-            Image<Bgr, Byte> im = myVideo.GetAverageFrame(0.2, true);
+            Image<Bgr, Byte> averageFrame = myVideo.GetAverageFrame(0.2, true);
             sw.Stop();
-
-            Console.WriteLine("Total Running Time: " + sw.ElapsedMilliseconds + "ms");
-            CvInvoke.Imshow("Name", im);
-            CvInvoke.WaitKey();
-            Console.ReadLine();
-            im.Dispose();
-            GC.Collect();
+            Console.WriteLine("Average Frame Total Running Time: " + sw.ElapsedMilliseconds + "ms");
 
             Console.ReadLine();
-            Console.WriteLine();
+
+            sw.Start();
+            byte[] motionSides = new byte[myVideo.FrameCount];
+            var videoImgs = myVideo.GetFrameList();
+            ArrayList videoDiffImages = new ArrayList();
+            ProcesserStaticMethods.detectAndSignMotions(videoImgs, averageFrame, videoDiffImages, myVideo, motionSides);
+            sw.Stop();
+            Console.WriteLine("Detecting Total Running Time: " + sw.ElapsedMilliseconds + "ms");
+
             Console.ReadLine();
         }
 

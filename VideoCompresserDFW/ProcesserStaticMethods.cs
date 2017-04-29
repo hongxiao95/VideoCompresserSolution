@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,18 +12,14 @@ namespace VideoCompresserDFW
 {
     class ProcesserStaticMethods
     {
-        private const int LEFT_MOTION = 1 << 1;
-        private const int RIGHT_MOTION = 1;
-        private const int BOTH_MOTION = 3;
-        private const int NO_MOTION = 0;
 
-        public static int LEFT_MOTION1 => LEFT_MOTION;
+        public static Byte LEFT_MOTION => 2;
 
-        public static int RIGHT_MOTION1 => RIGHT_MOTION;
+        public static Byte RIGHT_MOTION => 1;
 
-        public static int BOTH_MOTION1 => BOTH_MOTION;
+        public static Byte BOTH_MOTION => 3;
 
-        public static int NO_MOTION1 => NO_MOTION;
+        public static Byte NO_MOTION => 0;
 
         /// <summary>
         /// 判断给定方格内是否存在运动的函数
@@ -30,26 +27,83 @@ namespace VideoCompresserDFW
         /// <param name="imgDiff">预处理过的存储着与平均帧差值的差值帧</param>
         /// <param name="rec">存储着给定方格的左上和右下坐标的tuple((ltx, lty), (rbx, rby))</param>
         /// <returns>Boolean, Whether motion exists in given rectangle</returns>
-        public static bool JudgeMoving(Image<Gray, Byte> imgDiff, int[,] rec, int skipPixCount = 3, int motionThreshold = 4)
+        public static bool JudgeMoving(Image<Bgr, Byte> imgDiff, int[,] rec, int skipPixCount = 3, int motionThreshold = 4)
         {
 
             int recTotalPixValue = 0;
+            int allIndex = 0;
             for(int i = rec[0,1]; i < rec[1,1]; i+= skipPixCount)
             {
-                for(int j = rec[0,0]; j < rec[1,0]; i+= skipPixCount)
+                for(int j = rec[0,0]; j < rec[1,0]; j+= skipPixCount)
                 {
-                    recTotalPixValue += (int)imgDiff[i, j].Intensity;
+                    allIndex++;
+                    switch(allIndex % 3)
+                    {
+                        case 0:
+                            recTotalPixValue += (int)imgDiff[i, j].Blue;
+                            break;
+                        case 1:
+                            recTotalPixValue += (int)imgDiff[i, j].Green;
+                            break;
+                        case 2:
+                            recTotalPixValue += (int)imgDiff[i, j].Red;
+                            break;
+                        default:
+                            break;
+                    }
+                    
                 }
             }
 
             return recTotalPixValue > Math.Abs(rec[0, 1] - rec[1, 1]) * Math.Abs(rec[1, 0] - rec[1, 1]) * motionThreshold;
         }
 
-        public static void detectAndSignMotions()
+        public static void detectAndSignMotions(ArrayList videoImgs, Image<Bgr, Byte> videoAverageImage, ArrayList videoDiffImages, MyVideo sourceVideo, Byte[] motionSides)
         {
-            ;
+            Console.WriteLine();
+
+            //for (int i = 0; i < videoImgs.Count; i++)
+            Parallel.For(0, videoImgs.Count, i =>
+            {
+                ArrayList moveRects = new ArrayList();
+                var diffImage = (videoImgs[i] as Image<Bgr, Byte>).AbsDiff(videoAverageImage);
+                videoDiffImages.Add(diffImage);
+
+                for(int colIndex = 0; colIndex < sourceVideo.RectColCount; colIndex++)
+                {
+                    for(int rowIndex = 0; rowIndex < sourceVideo.RectRowCount; rowIndex++)
+                    {
+                        if(JudgeMoving(diffImage, sourceVideo.GetRectsPosition(rowIndex, colIndex)))
+                        {
+                            moveRects.Add(new int[] {rowIndex, colIndex});
+                            if(colIndex > sourceVideo.RectColCount / 2)
+                            {
+                                motionSides[i] |= RIGHT_MOTION;
+                            }
+                            else
+                            {
+                                motionSides[i] |= LEFT_MOTION;
+                            }
+                        }
+                    }
+                }
+
+                foreach(int[] rec in moveRects)
+                {
+                    CvInvoke.Rectangle(videoImgs[i] as Image<Bgr, Byte>, sourceVideo.GetRectsPositionRectangle(rec[0], rec[1]), new MCvScalar(0, 0, 255), 1);
+                }
+
+                double finishRate = (double)i / videoImgs.Count * 100.0;
+                if((i & 15) == 0)
+                {
+                    Console.Write(String.Format("\rMotion Detecting Processing : {0,4:F2}%\t", finishRate) +
+                    new string('▋', (int)finishRate / 5));
+                }               
+            }
+            );
+
+            Console.WriteLine("\rMotion Detecting Processing :   100%\t" + new String('▋', 20) +
+                    "Motion Detection Finished, Video Generating......");
         }
-
-
     }
 }

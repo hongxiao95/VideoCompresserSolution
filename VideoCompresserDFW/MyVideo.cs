@@ -96,28 +96,47 @@ namespace VideoCompresserDFW
             //}
         }
 
-        public Rectangle getRectsPosition(int rowIndex, int colIndex)
+        public int[,] GetRectsPosition(int rowIndex, int colIndex)
         {
+            int[,] retValue = new int[2, 2];
             try
             {
-                return SmallRects[rowIndex, colIndex];
+                retValue[0, 0] = SmallRects[rowIndex, colIndex].Left;
+                retValue[0, 1] = SmallRects[rowIndex, colIndex].Top;
+                retValue[1, 0] = SmallRects[rowIndex, colIndex].Right;
+                retValue[1, 1] = SmallRects[rowIndex, colIndex].Bottom;
+
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
 
-            return SmallRects[0, 0];
+            return retValue;
+        }
+        public Rectangle GetRectsPositionRectangle(int rowIndex, int colIndex)
+        {
+            try
+            {
+                return smallRects[rowIndex, colIndex];
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            return smallRects[0,0];
         }
 
         public void ReCapVideo()
         {
-            this.cap.SetCaptureProperty(CapProp.FrameCount, 0.0);
-            //this.cap.Dispose();
-            //this.CaptureVideo();
+            //this.cap.SetCaptureProperty(CapProp.FrameCount, 0.0);
+            this.cap.Dispose();
+            this.CaptureVideo();
             this.InitVideoInfo();
             //this.smallRectWidthInPix = Math.Min(this.smallRectWidthInPix, Math.Min(this.frameHeight, this.FrameWidth));
-            //this.InitRectsInfo();
+            this.InitRectsInfo();
         }
 
         public void Dispose()
@@ -219,6 +238,10 @@ namespace VideoCompresserDFW
 
             for(int i = 0; i < this.frameCount; i++)
             {
+                if(i >= 1999)
+                {
+                    int a = 0;
+                }
                 frameList.Add(this.ReadVideoImage());
             }
 
