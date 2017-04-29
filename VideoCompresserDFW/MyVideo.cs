@@ -27,6 +27,8 @@ namespace VideoCompresserDFW
         private int rectRowCount;
         private int rectColCount;
         private Rectangle[,] smallRects;
+        private Rectangle frameLeftRect;
+        private Rectangle frameRightRect;
 
         //纯私有
         private VideoCapture cap;
@@ -51,6 +53,8 @@ namespace VideoCompresserDFW
             this.frameWidth = (int)cap.GetCaptureProperty(CapProp.FrameWidth);
             this.fps = cap.GetCaptureProperty(CapProp.Fps);
             this.currentFrameIndex = 0;
+            this.frameLeftRect = new Rectangle(0, 0, this.frameWidth / 2, this.frameHeight);
+            this.frameRightRect = new Rectangle(this.frameWidth / 2, 0, this.frameWidth / 2, this.frameHeight);
         }
 
         public void CaptureVideo()
@@ -72,28 +76,28 @@ namespace VideoCompresserDFW
             this.rectRowCount = this.frameHeight / this.smallRectWidthInPix + (isLastRowUncompleted ? 1 : 0);
 
             smallRects = new Rectangle[this.rectRowCount, this.rectColCount];
-            Parallel.For(0, this.rectRowCount, i =>
-            {
-                for (int j = 0; j < this.rectColCount; j++)
-                {
-                    smallRects[i, j].X = this.smallRectWidthInPix * j;
-                    smallRects[i, j].Y = this.smallRectWidthInPix * j;
-
-                    smallRects[i, j].Width = Math.Min(this.frameWidth, this.smallRectWidthInPix * (j + 1)) - smallRects[i, j].X;
-                    smallRects[i, j].Height = Math.Min(this.frameHeight, this.smallRectWidthInPix * (i + 1)) - smallRects[i, j].Y;
-                }
-            });
-            //for(int i = 0; i < this.rectRowCount; i++)
+            //Parallel.For(0, this.rectRowCount, i =>
             //{
-            //    for(int j = 0; j < this.rectColCount; j++)
+            //    for (int j = 0; j < this.rectColCount; j++)
             //    {
             //        smallRects[i, j].X = this.smallRectWidthInPix * j;
-            //        smallRects[i, j].Y = this.smallRectWidthInPix * j;
+            //        smallRects[i, j].Y = this.smallRectWidthInPix * i;
 
             //        smallRects[i, j].Width = Math.Min(this.frameWidth, this.smallRectWidthInPix * (j + 1)) - smallRects[i, j].X;
             //        smallRects[i, j].Height = Math.Min(this.frameHeight, this.smallRectWidthInPix * (i + 1)) - smallRects[i, j].Y;
             //    }
-            //}
+            //});
+            for (int i = 0; i < this.rectRowCount; i++)
+            {
+                for (int j = 0; j < this.rectColCount; j++)
+                {
+                    smallRects[i, j].X = this.smallRectWidthInPix * j;
+                    smallRects[i, j].Y = this.smallRectWidthInPix * i;
+
+                    smallRects[i, j].Width = Math.Min(this.frameWidth, this.smallRectWidthInPix * (j + 1)) - smallRects[i, j].X;
+                    smallRects[i, j].Height = Math.Min(this.frameHeight, this.smallRectWidthInPix * (i + 1)) - smallRects[i, j].Y;
+                }
+            }
         }
 
         public int[,] GetRectsPosition(int rowIndex, int colIndex)
@@ -238,10 +242,6 @@ namespace VideoCompresserDFW
 
             for(int i = 0; i < this.frameCount; i++)
             {
-                if(i >= 1999)
-                {
-                    int a = 0;
-                }
                 frameList.Add(this.ReadVideoImage());
             }
 
@@ -260,5 +260,7 @@ namespace VideoCompresserDFW
         public int RectRowCount { get => rectRowCount;}
         public int RectColCount { get => rectColCount;}
         public Rectangle[,] SmallRects { get => smallRects;}
+        public Rectangle FrameLeftRect { get => frameLeftRect;  }
+        public Rectangle FrameRightRect { get => frameRightRect; }
     }
 }

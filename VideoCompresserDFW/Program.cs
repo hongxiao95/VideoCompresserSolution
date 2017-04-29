@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.Util;
+using Emgu.CV.VideoStab;
 
 namespace VideoCompresserDFW
 {
@@ -16,7 +17,7 @@ namespace VideoCompresserDFW
     {
         static void Main(string[] args)
         {
-            Console.ReadLine();
+            //Console.ReadLine();
             Stopwatch sw = new Stopwatch();
 
 
@@ -26,8 +27,9 @@ namespace VideoCompresserDFW
             sw.Stop();
             Console.WriteLine("Average Frame Total Running Time: " + sw.ElapsedMilliseconds + "ms");
 
-            Console.ReadLine();
+            //Console.ReadLine();
 
+            sw.Reset();
             sw.Start();
             byte[] motionSides = new byte[myVideo.FrameCount];
             var videoImgs = myVideo.GetFrameList();
@@ -36,6 +38,44 @@ namespace VideoCompresserDFW
             sw.Stop();
             Console.WriteLine("Detecting Total Running Time: " + sw.ElapsedMilliseconds + "ms");
 
+            sw.Reset();
+            sw.Start();
+            int[] newPoses = new int[2] { 0,0};
+
+            for(int i = 0; i < myVideo.FrameCount; i++)
+            {
+                ProcesserStaticMethods.CutMoveSide(newPoses, videoImgs, i, videoImgs, motionSides[i], myVideo);
+            }
+
+            VideoWriter writer = new VideoWriter("testOut.avi", VideoWriter.Fourcc('X', 'V', 'I', 'D'), (int)myVideo.Fps, myVideo.GetVideoSize(), true);
+
+            for(int i =0; i < videoImgs.Count; i++)
+            {
+                writer.Write((videoImgs[i] as Image<Bgr, Byte>).Mat);
+                (videoImgs[i] as Image<Bgr, Byte>).Mat.Dispose();
+            }
+            sw.Stop();
+
+            writer.Dispose();
+
+            Console.WriteLine("Finish, LastCost: " + sw.ElapsedMilliseconds + "ms");
+            foreach(Image<Bgr, Byte> im in videoImgs)
+            {
+                if (im != null)
+                {
+                    im.Dispose();
+                }
+            }
+
+            foreach(Image<Bgr, Byte> im in videoDiffImages)
+            {
+                if( im != null)
+                {
+                    im.Dispose();
+                }
+                
+            }
+            myVideo = null;
             Console.ReadLine();
         }
 

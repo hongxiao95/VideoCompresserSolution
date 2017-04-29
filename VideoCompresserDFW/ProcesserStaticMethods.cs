@@ -55,7 +55,7 @@ namespace VideoCompresserDFW
                 }
             }
 
-            return recTotalPixValue > Math.Abs(rec[0, 1] - rec[1, 1]) * Math.Abs(rec[1, 0] - rec[1, 1]) * motionThreshold;
+            return recTotalPixValue > Math.Abs(rec[0, 1] - rec[1, 1]) * Math.Abs(rec[1, 0] - rec[0, 0]) * motionThreshold;
         }
 
         public static void detectAndSignMotions(ArrayList videoImgs, Image<Bgr, Byte> videoAverageImage, ArrayList videoDiffImages, MyVideo sourceVideo, Byte[] motionSides)
@@ -73,8 +73,14 @@ namespace VideoCompresserDFW
                 {
                     for(int rowIndex = 0; rowIndex < sourceVideo.RectRowCount; rowIndex++)
                     {
+                        if(rowIndex == colIndex)
+                        {
+                            ;
+                        }
                         if(JudgeMoving(diffImage, sourceVideo.GetRectsPosition(rowIndex, colIndex)))
                         {
+                            //CvInvoke.Imshow("test", diffImage);
+                            //CvInvoke.WaitKey();
                             moveRects.Add(new int[] {rowIndex, colIndex});
                             if(colIndex > sourceVideo.RectColCount / 2)
                             {
@@ -103,7 +109,27 @@ namespace VideoCompresserDFW
             );
 
             Console.WriteLine("\rMotion Detecting Processing :   100%\t" + new String('▋', 20) +
-                    "Motion Detection Finished, Video Generating......");
+                    "\nMotion Detection Finished, Video Generating......");
+        }
+
+        public static void CutMoveSide(int[] newPoses, ArrayList intoImgs, int oldPos, ArrayList fromImgs, Byte side, MyVideo myVideo)
+        {
+            Image<Bgr, Byte> tmpIm;
+            if ((side & LEFT_MOTION) > 0)
+            {
+                tmpIm = intoImgs[newPoses[0]] as Image<Bgr, Byte>;
+                intoImgs[newPoses[0]] = (fromImgs[oldPos] as Image<Bgr, Byte>).GetSubRect(myVideo.FrameLeftRect).ConcateHorizontal((intoImgs[newPoses[0]] as Image<Bgr, Byte>).GetSubRect(myVideo.FrameRightRect));
+                newPoses[0]++;
+                tmpIm.Dispose();
+            }
+
+            if((side & RIGHT_MOTION) > 0)
+            {
+                tmpIm = intoImgs[newPoses[1]] as Image<Bgr, Byte>;
+                intoImgs[newPoses[1]] = (intoImgs[newPoses[1]] as Image<Bgr, Byte>).GetSubRect(myVideo.FrameLeftRect).ConcateHorizontal((fromImgs[oldPos] as Image<Bgr, Byte>).GetSubRect(myVideo.FrameRightRect));
+                newPoses[1]++;
+                tmpIm.Dispose();
+            }
         }
     }
 }
