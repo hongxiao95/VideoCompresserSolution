@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.Util;
+using Emgu.CV.CvEnum;
 
 namespace VideoCompresserDFW
 {
@@ -114,21 +116,25 @@ namespace VideoCompresserDFW
 
         public static void CutMoveSide(int[] newPoses, ArrayList intoImgs, int oldPos, ArrayList fromImgs, Byte side, MyVideo myVideo)
         {
-            Image<Bgr, Byte> tmpIm;
+            //Image<Bgr, Byte> tmpIm;
             if ((side & LEFT_MOTION) > 0)
             {
-                tmpIm = intoImgs[newPoses[0]] as Image<Bgr, Byte>;
+                //tmpIm = intoImgs[newPoses[0]] as Image<Bgr, Byte>;
                 intoImgs[newPoses[0]] = (fromImgs[oldPos] as Image<Bgr, Byte>).GetSubRect(myVideo.FrameLeftRect).ConcateHorizontal((intoImgs[newPoses[0]] as Image<Bgr, Byte>).GetSubRect(myVideo.FrameRightRect));
+                CvInvoke.PutText(intoImgs[newPoses[0]] as Image<Bgr, Byte>, "Original: " + ((int)((double)oldPos / myVideo.Fps / 60)).ToString()
+                    + " : " + ((int)(((double)oldPos) / myVideo.Fps) % 60).ToString(), new Point(10, 20), FontFace.HersheySimplex, 0.75, new MCvScalar(0, 0, 255), 2);
                 newPoses[0]++;
-                tmpIm.Dispose();
+                //tmpIm.Dispose();
             }
 
             if((side & RIGHT_MOTION) > 0)
             {
-                tmpIm = intoImgs[newPoses[1]] as Image<Bgr, Byte>;
+                //tmpIm = intoImgs[newPoses[1]] as Image<Bgr, Byte>;
                 intoImgs[newPoses[1]] = (intoImgs[newPoses[1]] as Image<Bgr, Byte>).GetSubRect(myVideo.FrameLeftRect).ConcateHorizontal((fromImgs[oldPos] as Image<Bgr, Byte>).GetSubRect(myVideo.FrameRightRect));
+                CvInvoke.PutText(intoImgs[newPoses[1]] as Image<Bgr, Byte>, "Original: " + ((int)((double)oldPos / myVideo.Fps / 60)).ToString()
+                    + " : " + ((int)(((double)oldPos) / myVideo.Fps) % 60).ToString(), new Point(myVideo.FrameWidth / 2 + 10, 20), FontFace.HersheySimplex, 0.75, new MCvScalar(0, 0, 255), 2);
+                //tmpIm.Dispose();
                 newPoses[1]++;
-                tmpIm.Dispose();
             }
         }
     }

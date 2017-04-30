@@ -47,9 +47,31 @@ namespace VideoCompresserDFW
                 ProcesserStaticMethods.CutMoveSide(newPoses, videoImgs, i, videoImgs, motionSides[i], myVideo);
             }
 
+            int leftLength = newPoses[0];
+            int rightLength = newPoses[1];
+            ArrayList averageFramList = new ArrayList();
+            averageFramList.Add(averageFrame);
+
+            if(leftLength > rightLength)
+            {
+                for(int i = rightLength; i < leftLength; i++)
+                {
+                    ProcesserStaticMethods.CutMoveSide(new int[] { 0, i }, videoImgs, 0, averageFramList, ProcesserStaticMethods.RIGHT_MOTION, myVideo);
+                    
+                }
+            }
+            else
+            {
+                for(int i = leftLength; i < rightLength; i++)
+                {
+                    ProcesserStaticMethods.CutMoveSide(new int[] { i, 0 }, videoImgs, 0, averageFramList, ProcesserStaticMethods.LEFT_MOTION, myVideo);
+                }
+
+            }
+
             VideoWriter writer = new VideoWriter("testOut.avi", VideoWriter.Fourcc('X', 'V', 'I', 'D'), (int)myVideo.Fps, myVideo.GetVideoSize(), true);
 
-            for(int i =0; i < videoImgs.Count; i++)
+            for(int i =0; i < Math.Max(rightLength, leftLength); i++)
             {
                 writer.Write((videoImgs[i] as Image<Bgr, Byte>).Mat);
                 (videoImgs[i] as Image<Bgr, Byte>).Mat.Dispose();
@@ -59,22 +81,7 @@ namespace VideoCompresserDFW
             writer.Dispose();
 
             Console.WriteLine("Finish, LastCost: " + sw.ElapsedMilliseconds + "ms");
-            foreach(Image<Bgr, Byte> im in videoImgs)
-            {
-                if (im != null)
-                {
-                    im.Dispose();
-                }
-            }
 
-            foreach(Image<Bgr, Byte> im in videoDiffImages)
-            {
-                if( im != null)
-                {
-                    im.Dispose();
-                }
-                
-            }
             myVideo = null;
             Console.ReadLine();
         }
