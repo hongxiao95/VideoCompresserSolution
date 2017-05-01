@@ -33,8 +33,7 @@ namespace VideoCompresserDFW
             sw.Start();
             byte[] motionSides = new byte[myVideo.FrameCount];
             var videoImgs = myVideo.GetFrameList();
-            ArrayList videoDiffImages = new ArrayList();
-            ProcesserStaticMethods.detectAndSignMotions(videoImgs, averageFrame, videoDiffImages, myVideo, motionSides);
+            ProcesserStaticMethods.detectAndSignMotions(videoImgs, averageFrame, myVideo, motionSides);
             sw.Stop();
             Console.WriteLine("Detecting Total Running Time: " + sw.ElapsedMilliseconds + "ms");
 
@@ -50,6 +49,7 @@ namespace VideoCompresserDFW
             int leftLength = newPoses[0];
             int rightLength = newPoses[1];
             ArrayList averageFramList = new ArrayList();
+            
             averageFramList.Add(averageFrame);
 
             if(leftLength > rightLength)
@@ -74,13 +74,18 @@ namespace VideoCompresserDFW
             for(int i =0; i < Math.Max(rightLength, leftLength); i++)
             {
                 writer.Write((videoImgs[i] as Image<Bgr, Byte>).Mat);
-                (videoImgs[i] as Image<Bgr, Byte>).Mat.Dispose();
             }
             sw.Stop();
 
             writer.Dispose();
+            foreach (Image<Bgr, Byte> im in videoImgs)
+            {
+                im.Dispose();
+            }
 
             Console.WriteLine("Finish, LastCost: " + sw.ElapsedMilliseconds + "ms");
+            videoImgs.Clear();
+            GC.Collect();
 
             myVideo = null;
             Console.ReadLine();

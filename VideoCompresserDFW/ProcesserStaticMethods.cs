@@ -60,7 +60,7 @@ namespace VideoCompresserDFW
             return recTotalPixValue > Math.Abs(rec[0, 1] - rec[1, 1]) * Math.Abs(rec[1, 0] - rec[0, 0]) * motionThreshold;
         }
 
-        public static void detectAndSignMotions(ArrayList videoImgs, Image<Bgr, Byte> videoAverageImage, ArrayList videoDiffImages, MyVideo sourceVideo, Byte[] motionSides)
+        public static void detectAndSignMotions(ArrayList videoImgs, Image<Bgr, Byte> videoAverageImage, MyVideo sourceVideo, Byte[] motionSides)
         {
             Console.WriteLine();
 
@@ -69,7 +69,6 @@ namespace VideoCompresserDFW
             {
                 ArrayList moveRects = new ArrayList();
                 var diffImage = (videoImgs[i] as Image<Bgr, Byte>).AbsDiff(videoAverageImage);
-                videoDiffImages.Add(diffImage);
 
                 for(int colIndex = 0; colIndex < sourceVideo.RectColCount; colIndex++)
                 {
@@ -95,6 +94,7 @@ namespace VideoCompresserDFW
                         }
                     }
                 }
+                diffImage.Dispose();
 
                 foreach(int[] rec in moveRects)
                 {
