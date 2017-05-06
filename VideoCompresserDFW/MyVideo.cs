@@ -29,18 +29,19 @@ namespace VideoCompresserDFW
         private Rectangle[,] smallRects;
         private Rectangle frameLeftRect;
         private Rectangle frameRightRect;
+        private Mat matObj;
 
         //纯私有
         private VideoCapture cap;
         private bool isLastColUncompleted;
         private bool isLastRowUncompleted;
-        private Mat mat;
+        
 
         public MyVideo(String sourceVideoFileName, int smallRectWidthInPix)
         {
             this.sourceVideoFileName = sourceVideoFileName;
             this.smallRectWidthInPix = smallRectWidthInPix;
-            mat = new Mat();
+            matObj = new Mat();
             this.CaptureVideo();
             this.InitVideoInfo();
             this.InitRectsInfo();
@@ -135,7 +136,7 @@ namespace VideoCompresserDFW
 
         public void ReCapVideo()
         {
-            //this.cap.SetCaptureProperty(CapProp.FrameCount, 0.0);
+            //this.cap.SetCaptureProperty(CapProp.FrameCount, 0.0); //wrong
             this.cap.Dispose();
             this.CaptureVideo();
             this.InitVideoInfo();
@@ -146,20 +147,20 @@ namespace VideoCompresserDFW
         public void Dispose()
         {
             cap.Dispose();
-            mat.Dispose();
+            matObj.Dispose();
         }
 
         public Image<Bgr, Byte> ReadVideoImage()
         {
             this.currentFrameIndex++;
-            cap.Read(this.mat);
-            return this.mat.ToImage<Bgr, Byte>();
+            cap.Read(this.matObj);
+            return this.matObj.ToImage<Bgr, Byte>();
         }
-        public Mat ReadVideoImageMat()
+        public void ReadVideoMat()
         {
             this.currentFrameIndex++;
-            cap.Read(this.mat);
-            return mat;
+            cap.Read(this.matObj);
+            //return mat;
         }
 
         public void Release()
@@ -178,10 +179,10 @@ namespace VideoCompresserDFW
             calcRate = Math.Min(1.0, calcRate);
             int skippedEach = (int)(1.0 / calcRate);
 
-            Image<Bgr, int> averageFrame = this.ReadVideoImageMat().ToImage<Bgr, int>();
+            this.ReadVideoMat();
+            Image<Bgr, int> averageFrame = this.MatObj.ToImage<Bgr, int>();
             int tempImageCount = 1;
             double finishRate = 1.0 / this.frameCount * 100;
-           //Mat tmpMat = new Mat();
 
             if (offOrOnPrintInfo)
             {
@@ -189,46 +190,50 @@ namespace VideoCompresserDFW
                     new String('▋', (int)finishRate / 5));
             }
 
-            //for (int i = 1; i < this.frameCount; i++)
-            //{
-
-            //    tmpMat = this.ReadVideoImageMat();
-            //    if (i % skippedEach == 0)
-            //    {
-            //        averageFrame += tmpMat.ToImage<Bgr, int>();
-            //        tempImageCount++;
-            //    }
-            //    if (offOrOnPrintInfo)
-            //    {
-            //        finishRate = (double)i / this.frameCount * 100;
-            //        Console.Write("\r" + new String(' ', 70) + "\r" + String.Format("Getting Average Frame... {0,4:F2} %\t\t", finishRate) +
-            //        new String('▋', (int)finishRate / 5));
-            //    }
-            //}
-
-            //Seems Higher Efficiency
-            for (int i = 1; i < calcRate * this.frameCount; i++)
+            for (int i = 1; i < this.frameCount; i++)
             {
-                cap.SetCaptureProperty(CapProp.FrameCount, this.currentFrameIndex + skippedEach);
-                this.currentFrameIndex += skippedEach - 1;
-                Image<Bgr, int> tmpImage = this.ReadVideoImageMat().ToImage<Bgr, int>();
-                averageFrame += tmpImage;
-                tmpImage.Dispose();
-                tempImageCount++;
 
+                this.ReadVideoMat();
+                if (i % skippedEach == 0)
+                {
+                    Image<Bgr, int> tmpImage = this.MatObj.ToImage<Bgr, int>();
+                    averageFrame += tmpImage;
+                    tempImageCount++;
+                    tmpImage.Dispose();
+                }
                 if (offOrOnPrintInfo)
                 {
-                    finishRate = (double)this.currentFrameIndex / this.frameCount * 100;
+                    finishRate = (double)i / this.frameCount * 100;
                     Console.Write("\r" + new String(' ', 70) + "\r" + String.Format("Getting Average Frame... {0,4:F2} %\t\t", finishRate) +
                     new String('▋', (int)finishRate / 5));
                 }
             }
+
+            #region WrongBlock
+            //Wrong thought Seems Higher Efficiency
+            //for (int i = 1; i < calcRate * this.frameCount; i++)
+            //{
+            //    cap.SetCaptureProperty(CapProp.FrameCount, this.currentFrameIndex + skippedEach);
+            //    this.currentFrameIndex += skippedEach - 1;
+            //    Image<Bgr, int> tmpImage = this.ReadVideoImageMat().ToImage<Bgr, int>();
+            //    averageFrame += tmpImage;
+            //    tmpImage.Dispose();
+            //    tempImageCount++;
+
+            //    if (offOrOnPrintInfo)
+            //    {
+            //        finishRate = (double)this.currentFrameIndex / this.frameCount * 100;
+            //        Console.Write("\r" + new String(' ', 70) + "\r" + String.Format("Getting Average Frame... {0,4:F2} %\t\t", finishRate) +
+            //        new String('▋', (int)finishRate / 5));
+            //    }
+            //}
+#endregion WrongBlock
             Console.WriteLine();
 
             averageFrame /= tempImageCount;
             Image<Bgr, Byte> averageFrameInByte = averageFrame.Convert<Bgr, Byte>();
             averageFrame.Dispose();
-
+            averageFrame.Mat.Dispose();
             return averageFrameInByte;
         }
 
@@ -262,5 +267,6 @@ namespace VideoCompresserDFW
         public Rectangle[,] SmallRects { get => smallRects;}
         public Rectangle FrameLeftRect { get => frameLeftRect;  }
         public Rectangle FrameRightRect { get => frameRightRect; }
+        public Mat MatObj { get => matObj;}
     }
 }

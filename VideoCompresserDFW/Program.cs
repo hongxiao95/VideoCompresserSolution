@@ -17,7 +17,7 @@ namespace VideoCompresserDFW
     {
         static void Main(string[] args)
         {
-            //Console.ReadLine();
+            Console.ReadLine();
             Stopwatch sw = new Stopwatch();
 
 
@@ -26,6 +26,19 @@ namespace VideoCompresserDFW
             Image<Bgr, Byte> averageFrame = myVideo.GetAverageFrame(0.2, true);
             sw.Stop();
             Console.WriteLine("Average Frame Total Running Time: " + sw.ElapsedMilliseconds + "ms");
+
+
+            Console.ReadLine();
+            sw.Reset();
+            sw.Start();
+            myVideo.ReCapVideo();
+            for(int i = 0; i < 2500; i++)
+            {
+                myVideo.ReadVideoMat();
+            }
+            sw.Stop();
+            Console.WriteLine("Reading All Total Running Time: " + sw.ElapsedMilliseconds + "ms");
+            Console.ReadLine();
 
             //Console.ReadLine();
 
