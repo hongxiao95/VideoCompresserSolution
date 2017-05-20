@@ -60,6 +60,64 @@ namespace VideoCompresserDFW
             return recTotalPixValue > Math.Abs(rec[0, 1] - rec[1, 1]) * Math.Abs(rec[1, 0] - rec[0, 0]) * motionThreshold;
         }
 
+        public static bool JudgeMovingGray(Image<Gray, Byte> imgDiff, int[,] rec, int skipPixCount = 3, int motionThreshold = 4)
+        {
+            int recTotalPixValue = 0;
+            int allIndex = 0;
+            for (int i = rec[0, 1]; i < rec[1, 1]; i += skipPixCount)
+            {
+                for (int j = rec[0, 0]; j < rec[1, 0]; j += skipPixCount)
+                {
+                    allIndex++;
+                    recTotalPixValue += (int)imgDiff[i, j].Intensity;
+                }
+            }
+
+            return recTotalPixValue > Math.Abs(rec[0, 1] - rec[1, 1]) * Math.Abs(rec[1, 0] - rec[0, 0]) * motionThreshold;
+        }
+
+        public static ArrayList detectedAndSighMotionsVibe(MyVideo sourceVideo, Byte[] motionSides, VibeAve vibeAve, int index)
+        {
+            ArrayList moveRects = new ArrayList();
+
+            Image<Bgr, Byte> currentFrame = sourceVideo.ReadVideoImage();
+            vibeAve.testAndUpdate(currentFrame);
+            Image<Gray, Byte> diffImage = vibeAve.getMask();
+
+            for (int colIndex = 0; colIndex < sourceVideo.RectColCount; colIndex++)
+            {
+                for (int rowIndex = 0; rowIndex < sourceVideo.RectRowCount; rowIndex++)
+                {
+                    if (rowIndex == colIndex)
+                    {
+                        ;
+                    }
+                    if (JudgeMovingGray(diffImage, sourceVideo.GetRectsPosition(rowIndex, colIndex)))
+                    {
+                        //CvInvoke.Imshow("test", diffImage);
+                        //CvInvoke.WaitKey();
+                        moveRects.Add(new int[] { rowIndex, colIndex });
+                        if (colIndex > sourceVideo.RectColCount / 2)
+                        {
+                            motionSides[index] |= RIGHT_MOTION;
+                        }
+                        else
+                        {
+                            motionSides[index] |= LEFT_MOTION;
+                        }
+                    }
+                }
+            }
+            diffImage.Dispose();
+
+            if(index % 15 == 0)
+            {
+                Console.WriteLine(index + "/" + sourceVideo.FrameCount);
+            }
+
+            return moveRects;
+        }
+
         public static void detectAndSignMotions(ArrayList videoImgs, Image<Bgr, Byte> videoAverageImage, MyVideo sourceVideo, Byte[] motionSides)
         {
             Console.WriteLine();

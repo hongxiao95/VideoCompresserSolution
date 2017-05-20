@@ -17,9 +17,42 @@ namespace VideoCompresserDFW
     {
         static void Main(string[] args)
         {
+            VibeWay();
+        }
+
+        public static void VibeWay()
+        {
             Console.ReadLine();
             Stopwatch sw = new Stopwatch();
 
+            sw.Start();
+            MyVideo myVideo = new MyVideo(".\\SourceVideo2.mp4", 16);
+            VibeAve vibeAve = new VibeAve();
+            Image<Bgr, Byte> firstFrame = myVideo.ReadVideoImage();
+            vibeAve.init(firstFrame);
+            vibeAve.processFirstFrame(firstFrame);
+            myVideo.ReCapVideo();
+            sw.Stop();
+            Console.WriteLine("Average Frame Total Running Time: " + sw.ElapsedMilliseconds + "ms");
+
+            sw.Reset();
+            sw.Start();
+            ArrayList moveRectsInAllFrame = new ArrayList();
+            byte[] motionSides = new byte[myVideo.FrameCount];
+            for (int i =0; i < myVideo.FrameCount; i++)
+            {
+                moveRectsInAllFrame.Add(ProcesserStaticMethods.detectedAndSighMotionsVibe(myVideo, motionSides, vibeAve, i));
+            }
+            sw.Stop();
+            Console.WriteLine("Detected Total Running Time: " + sw.ElapsedMilliseconds + "ms");
+
+            Console.ReadLine();
+        }
+
+        private static void TraditionalWay()
+        {
+            Console.ReadLine();
+            Stopwatch sw = new Stopwatch();
 
             sw.Start();
             MyVideo myVideo = new MyVideo(".\\SourceVideo2.mp4", 16);
@@ -32,7 +65,7 @@ namespace VideoCompresserDFW
             sw.Reset();
             sw.Start();
             myVideo.ReCapVideo();
-            for(int i = 0; i < 2500; i++)
+            for (int i = 0; i < 2500; i++)
             {
                 myVideo.ReadVideoMat();
             }
@@ -52,9 +85,9 @@ namespace VideoCompresserDFW
 
             sw.Reset();
             sw.Start();
-            int[] newPoses = new int[2] { 0,0};
+            int[] newPoses = new int[2] { 0, 0 };
 
-            for(int i = 0; i < myVideo.FrameCount; i++)
+            for (int i = 0; i < myVideo.FrameCount; i++)
             {
                 ProcesserStaticMethods.CutMoveSide(newPoses, videoImgs, i, videoImgs, motionSides[i], myVideo);
             }
@@ -62,20 +95,20 @@ namespace VideoCompresserDFW
             int leftLength = newPoses[0];
             int rightLength = newPoses[1];
             ArrayList averageFramList = new ArrayList();
-            
+
             averageFramList.Add(averageFrame);
 
-            if(leftLength > rightLength)
+            if (leftLength > rightLength)
             {
-                for(int i = rightLength; i < leftLength; i++)
+                for (int i = rightLength; i < leftLength; i++)
                 {
                     ProcesserStaticMethods.CutMoveSide(new int[] { 0, i }, videoImgs, 0, averageFramList, ProcesserStaticMethods.RIGHT_MOTION, myVideo);
-                    
+
                 }
             }
             else
             {
-                for(int i = leftLength; i < rightLength; i++)
+                for (int i = leftLength; i < rightLength; i++)
                 {
                     ProcesserStaticMethods.CutMoveSide(new int[] { i, 0 }, videoImgs, 0, averageFramList, ProcesserStaticMethods.LEFT_MOTION, myVideo);
                 }
@@ -84,7 +117,7 @@ namespace VideoCompresserDFW
 
             VideoWriter writer = new VideoWriter("testOut.avi", VideoWriter.Fourcc('X', 'V', 'I', 'D'), (int)myVideo.Fps, myVideo.GetVideoSize(), true);
 
-            for(int i =0; i < Math.Max(rightLength, leftLength); i++)
+            for (int i = 0; i < Math.Max(rightLength, leftLength); i++)
             {
                 writer.Write((videoImgs[i] as Image<Bgr, Byte>).Mat);
             }
