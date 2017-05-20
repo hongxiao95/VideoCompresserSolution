@@ -209,7 +209,7 @@ namespace VideoCompresserDFW
                 }
             }
 
-            #region WrongBlock
+            #region WrongBlock, Already Commented
             //Wrong thought Seems Higher Efficiency
             //for (int i = 1; i < calcRate * this.frameCount; i++)
             //{
@@ -227,7 +227,7 @@ namespace VideoCompresserDFW
             //        new String('▋', (int)finishRate / 5));
             //    }
             //}
-#endregion WrongBlock
+#endregion 
             Console.WriteLine();
 
             averageFrame /= tempImageCount;
